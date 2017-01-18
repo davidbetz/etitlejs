@@ -1,0 +1,4 @@
+The content is not part of the sample.
+
+See my econtentn project for details on handling content metadata:
+  https://github.com/davidbetz/econtentn

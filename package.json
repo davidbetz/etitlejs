@@ -1,0 +1,16 @@
+{
+  "name": "etitle",
+  "version": "1.0.0",
+  "description": "**Copyright (c) 2017 David Betz**",
+  "main": "etitle.js",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  }
+}
