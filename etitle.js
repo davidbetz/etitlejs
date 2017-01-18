@@ -16,6 +16,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+"use strict"
+
 const fs = require('fs');
 const path = require('path');
 
@@ -23,13 +25,13 @@ const poundre = /^#([0-9]+)#(.*)/i;
 const doubleequalsre = /==([A-Za-z0-9]+)/i;
 const titleFileName = '.titles';
 
-parse = (input, base, options) => {
+const parse = (input, base, options) => {
     options = options || {};
     options.labelMode = options.labelMode || 'root';
     return processSelector(input, base, options)
 };
 
-parseUsingTitleDataSync = (input, base, options) => {
+const parseUsingTitleDataSync = (input, base, options) => {
     options = options || {};
     options.labelMode = options.labelMode || 'root';
     const parent = path.dirname(input).replace(/\\/g, "/");
@@ -40,7 +42,7 @@ parseUsingTitleDataSync = (input, base, options) => {
     return processSelector(input, base, options)
 };
 
-parseUsingTitleData = (input, base, options) => {
+const parseUsingTitleData = (input, base, options) => {
     options = options || {};
     options.labelMode = options.labelMode || 'root';
     return new Promise((resolve, reject) => {
@@ -59,12 +61,12 @@ parseUsingTitleData = (input, base, options) => {
     });
 }
 
-createSelector = (key, allowHyphensInSelector, keepDot) => {
+const createSelector = (key, allowHyphensInSelector, keepDot) => {
     if (!key) {
         return '';
     }
     if (key.indexOf("==") > -1) {
-        partArray = key.split('/');
+        const partArray = key.split('/');
         const list = [];
         for (let part of partArray) {
             if (part.indexOf("==") > -1) {
@@ -107,16 +109,18 @@ function createEffectiveTitleData(rootTitleData, relativeTitleData) {
     return effectiveTitleData;
 };
 
-transformTitleData = (data) => data.split('\n').map(line => {
-    const index = line.indexOf(',');
-    if (index == -1) {
-        return null;
-    }
-    return {
-        key: line.substring(0, index).trim(),
-        title: line.substring(index + 1).trim()
-    };
-});
+function transformTitleData(data) {
+    return data.split('\n').map(line => {
+        const index = line.indexOf(',');
+        if (index == -1) {
+            return null;
+        }
+        return {
+            key: line.substring(0, index).trim(),
+            title: line.substring(index + 1).trim()
+        };
+    });
+}
 
 function parseTitleDataSync(titleFolder) {
     const titleFile = path.join(titleFolder, titleFileName);
@@ -165,8 +169,8 @@ function processSelector(input, base, options) {
     const branch_title = formatBranchName(url.split('/')[0]);
     const branchesToRoot = createSelector(url);
     //+ 
-    selector = createSelector(clean(url) + '/' + key, allowHyphensInSelector);
-    branch = createSelector(url.split('/')[0] || '', allowHyphensInSelector);
+    const selector = createSelector(clean(url) + '/' + key, allowHyphensInSelector);
+    const branch = createSelector(url.split('/')[0] || '', allowHyphensInSelector);
     //+ 
     title = cleanTitle(selector, title, options.titleData).trim();
     //+ label
@@ -210,6 +214,8 @@ function cleanTitle(key, title, titleData) {
 }
 
 function getKeyAndTitle(path, allowHyphensInSelector) {
+    let key;
+    let title;
     const semicolonIndex = path.indexOf(";");
     if (semicolonIndex > 0 && path[semicolonIndex - 1] != '/') {
         path = path.substring(0, semicolonIndex);
