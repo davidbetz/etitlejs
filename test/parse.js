@@ -127,16 +127,6 @@ const check = (item, result) => {
     item.labels.forEach(v => expect(labels).to.include(v));
 };
 
-function runWithTitleData(item, options) {
-    return new Promise((resolve, reject) => {
-        etitle.parse(item.file, SAMPLE_ROOT, options)
-            .then(result => {
-                check(item, result);
-                resolve();
-            }).catch(err => reject(err));
-    });
-}
-
 describe("econtent", function () {
     it("tests createSelector", function (done) {
         const selector = etitle.createSelector('{=s.=b. }smith/lectures/{On the }2nd Person');
