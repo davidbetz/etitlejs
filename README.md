@@ -4,6 +4,8 @@
 
 (the 2017 Node.js port of the 2008 .NET version)
 
+[![Build Status](https://travis-ci.org/davidbetz/etitlen.svg?branch=master)](https://travis-ci.org/davidbetz/etitlen)
+
 ## Installation
 
     npm install etitle
