@@ -1,8 +1,8 @@
-# Extended Title Reader (Node.JS)
+# Extended Title Reader (JavaScript)
 
 **Copyright (c) 2017 David Betz**
 
-(the 2017 Node.js port of the 2008 .NET version)
+(the 2017 JavaScript port of the 2008 .NET version)
 
 [![Build Status](https://travis-ci.org/davidbetz/etitlejs.svg?branch=master)](https://travis-ci.org/davidbetz/etitlejs)
 [![npm version](https://badge.fury.io/js/etitle.svg)](https://badge.fury.io/js/etitle)
