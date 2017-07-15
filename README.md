@@ -4,7 +4,7 @@
 
 (the 2017 Node.js port of the 2008 .NET version)
 
-[![Build Status](https://travis-ci.org/davidbetz/etitlen.svg?branch=master)](https://travis-ci.org/davidbetz/etitlen)
+[![Build Status](https://travis-ci.org/davidbetz/etitlejs.svg?branch=master)](https://travis-ci.org/davidbetz/etitlejs)
 [![npm version](https://badge.fury.io/js/etitle.svg)](https://badge.fury.io/js/etitle)
 
 ## Installation
@@ -15,7 +15,7 @@ Home:
 
 * [https://www.npmjs.com/package/etitle](https://www.npmjs.com/package/etitle)
 
-* [https://github.com/davidbetz/etitlen](https://github.com/davidbetz/etitlen)
+* [https://github.com/davidbetz/etitlejs](https://github.com/davidbetz/etitlejs)
 
 Related project: 
     
