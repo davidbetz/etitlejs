@@ -4,8 +4,12 @@
 
 (the 2017 JavaScript port of the 2008 .NET version)
 
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
 [![Build Status](https://travis-ci.org/davidbetz/etitlejs.svg?branch=master)](https://travis-ci.org/davidbetz/etitlejs)
 [![npm version](https://badge.fury.io/js/etitle.svg)](https://badge.fury.io/js/etitle)
+[![coverage](https://img.shields.io/codecov/c/github/davidbetz/etitlejs.svg)](https://img.shields.io/codecov/c/github/davidbetz/etitlejs.svg)
+[![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/davidbetz)
+
 
 ## Installation
 
@@ -28,6 +32,12 @@ Related project:
 Filenames can contain a lot more than simply a name. This is an important discovery when a filename is all that we have. Modern content solutions demand pretty URLs, expressive titles, and meaningful tags/labels.
 
 This projects lets you get all of these from the filename.
+
+## Origin
+
+I recently told a buddy that I suffer from Not-Invented-Here-Syndrome like nobody else, to which he quickly responded: "well, yeah, didn't you write your own router??" [Yeah...](https://github.com/davidbetz/netrouter).
+
+My CMS is huge (30 .NET projects with abstraction layers for every possible [Aristotelian](https://www.youtube.com/watch?v=ZeT9AZJqxFU) database/queue/online blob store + Django and ASP.NET web frameworks) and controls all my websites. I devised the title concepts here to manage the majority of metadata (see [econtentjs](https://github.com/davidbetz/econtentjs) for the rest.) I've extracted this portion from the .NET solution and ported it to JavaScript.
 
 ## Example
 
@@ -254,9 +264,9 @@ There are two core functions. The signatures are:
     
 * `[selector, branch, title, branch_title, labels] etitle.parse(filename, fileroot, options)`
 
-* `[selector, branch, title, branch_title, labels] etitle.parseUsingTitleDataSync(filename, fileroot, options)`
+* `[selector, branch, title, branch_title, labels] etitle.parse_with_titlesSync(filename, fileroot, options)`
 
-* `[Promise] etitle.parseUsingTitleData(filename, fileroot, options)`
+* `[Promise] etitle.parse_with_titles(filename, fileroot, options)`
 
 The syntax of the first is fairly simple:
 
@@ -264,11 +274,11 @@ The syntax of the first is fairly simple:
 
 The second is like the first, but also looks for title data (`.titles`)
 
-    let [selector, branch, title, branch_title, labels] = etitle.parseUsingTitleDataSync(filename, fileroot, options)
+    let [selector, branch, title, branch_title, labels] = etitle.parse_with_titlesSync(filename, fileroot, options)
 
 The third is uses a Promise. Therefore, your usage is the following:
 
-        etitle.parseUsingTitleData(filename, fileroot, options)
+        etitle.parse_with_titles(filename, fileroot, options)
             .then(v => {
                 let [selector, branch, title, branch_title, labels] =  = v;
             })
@@ -286,15 +296,15 @@ The `fileroot` is the base of all your files. When doing an iterative filesystem
 
 * `titleData`: this is an array of key/value objects which can manually override titles; if set, titles are not searched for, even if the title functions are used. This enables scenarios where external titles might be needed, but disabling won't require code changes. Effectively, setting `titleData` to [] will disable the title search.
 
-### createSelector
+### create_selector
 
-Though the above functions are the primary entry points, the internally used `createSelector` function has also been exported.
+Though the above functions are the primary entry points, the internally used `create_selector` function has also been exported.
 
 This function creates a key from a path and has myriad use cases. For example, a simply find/replace from / to _ will make a legal Azure Table Storage key.
 
 Signature:
 
-    [selector] createSelector(path, allowHyphensInSelector, keepDot)
+    [selector] create_selector(path, allowHyphensInSelector, keepDot)
 
 Consider the following:
 

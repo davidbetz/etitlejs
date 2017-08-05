@@ -20,84 +20,11 @@
 
 const fs = require('fs')
 const path = require('path')
+const u = require('./utility')
 
 const poundre = /^#([0-9]+)#(.*)/i
 const doubleequalsre = /==([A-Za-z0-9]+)/i
 const titleFileName = '.titles'
-
-const parse = (input, base, options) => {
-    options = options || {}
-    options.labelMode = options.labelMode || 'root'
-    return processSelector(input, base, options)
-}
-
-const parseUsingTitleDataSync = (input, base, options) => {
-    options = options || {}
-    options.labelMode = options.labelMode || 'root'
-    const parent = path.dirname(input).replace(/\\/g, "/")
-    if (options.titleData && options.titleData.length > 0) {
-        return processSelector(input, base, options)
-    }
-    options.titleData = createEffectiveTitleData(parseTitleDataSync(base), parseTitleDataSync(parent))
-    return processSelector(input, base, options)
-}
-
-const parseUsingTitleData = (input, base, options) => {
-    options = options || {}
-    options.labelMode = options.labelMode || 'root'
-    return new Promise((resolve, reject) => {
-        const parent = path.dirname(input).replace(/\\/g, "/")
-        if (options.titleData && options.titleData.length > 0) {
-            return resolve(processSelector(input, base, options))
-        }
-        parseTitleData(base)
-            .then(rootTitleData =>
-                parseTitleData(parent)
-                    .then(relativeTitleData => {
-                        options.titleData = createEffectiveTitleData(rootTitleData, relativeTitleData)
-                        resolve(processSelector(input, base, options))
-                    }).catch(err => { reject(err); })
-            ).catch(err => { reject(err); })
-    })
-}
-
-const createSelector = (key, allowHyphensInSelector, keepDot) => {
-    if (!key) {
-        return ''
-    }
-    if (key.indexOf("==") > -1) {
-        const partArray = key.split('/')
-        const list = []
-        for (let part of partArray) {
-            if (part.indexOf("==") > -1) {
-                const doubleequalsresult = doubleequalsre.exec(part)
-                if (doubleequalsresult != null) {
-                    const [, item] = doubleequalsresult
-                    list.push(item.trim())
-                }
-            }
-            else {
-                list.push(part)
-            }
-        }
-        key = list.join("/")
-    }
-
-    key = key
-        .replace(/%questionmark%/g, "?")
-        .replace(/%colon%/g, ":")
-        .replace(/%quotes%/g, "\"")
-        .replace(/%slash%/g, "/")
-        .replace(/%blackslash%/g, "\\")
-        .replace(/ /g, '')
-        .trim().toLowerCase()
-
-    key = removeEachException(key)
-
-    key = key.replace(new RegExp(`[^A-Za-z0-9\/${(allowHyphensInSelector ? "-" : '')}${(keepDot ? "\\." : '')}]+`, 'g'), '')
-
-    return key
-}
 
 function createEffectiveTitleData(rootTitleData, relativeTitleData) {
     let effectiveTitleData = rootTitleData
@@ -119,17 +46,7 @@ function transformTitleData(data) {
             key: line.substring(0, index).trim(),
             title: line.substring(index + 1).trim()
         }
-    })
-}
-
-function parseTitleDataSync(titleFolder) {
-    const titleFile = path.join(titleFolder, titleFileName)
-    if (!fs.existsSync(titleFile)) {
-        return []
-    }
-    else {
-        return transformTitleData(fs.readFileSync(titleFile, 'utf8'))
-    }
+    }).filter(p => p !== null)
 }
 
 function parseTitleData(titleFolder) {
@@ -140,7 +57,6 @@ function parseTitleData(titleFolder) {
                 return resolve([])
             }
             fs.readFile(titleFile, 'utf8', function (err, data) {
-                if (err) throw reject(err)
                 resolve(transformTitleData(data))
             })
         })
@@ -156,27 +72,29 @@ function clean(path) {
 function processSelector(input, base, options) {
     const allowHyphensInSelector = options.allowHyphensInSelector
     const labelMode = options.labelMode
-    const parent = path.dirname(input).replace(/\\/g, "/")
     input = clean(input.substring(base.length)).replace(/\\/g, "/")
     const name = path.basename(input).replace(/\\/g, "/")
     input = clean(input.substring(0, input.length - name.length - 1))
     base = base.replace(/\\/g, "/")
-    const lastDot = name.lastIndexOf(".")
-    const filename = name.substring(0, lastDot)
-    let [key, title] = getKeyAndTitle(filename, allowHyphensInSelector)
+    let filename = name
+    const lio = name.lastIndexOf(".")
+    if (lio > -1) {
+        filename = name.substring(0, lio)
+    }
+    let [key, title, sequence] = getKeyAndTitle(filename, allowHyphensInSelector)
     const semicolonIndex = filename.indexOf(";")
     const url = input.replace(/\\/g, '/')
     const branch_title = formatBranchName(url.split('/')[0])
-    const branchesToRoot = createSelector(url)
+    const branchesToRoot = create_selector(url)
     //+ 
-    const selector = createSelector(clean(url) + '/' + key, allowHyphensInSelector)
-    const branch = createSelector(url.split('/')[0] || '', allowHyphensInSelector)
+    const selector = create_selector(clean(url) + '/' + key, allowHyphensInSelector)
+    const branch = create_selector(url.split('/')[0], allowHyphensInSelector)
     //+ 
     title = cleanTitle(selector, title, options.titleData).trim()
     //+ label
     let labels = []
     if (semicolonIndex > 0 && filename[semicolonIndex - 1] != '/') {
-        filename.substring(semicolonIndex + 1, filename.length).split(';').map(v => labels.push(createSelector(v)))
+        filename.substring(semicolonIndex + 1, filename.length).split(';').map(v => labels.push(create_selector(v)))
     }
     if (labelMode == 'root' && branch) {
         labels.push(branch)
@@ -187,13 +105,17 @@ function processSelector(input, base, options) {
     else if (labelMode == 'each' && branchesToRoot) {
         branchesToRoot.split('/').map(v => labels.push(v))
     }
-    return [selector, branch, title, branch_title, labels || []]
+    return {
+        selector,
+        branch,
+        title,
+        branch_title,
+        labels,
+        sequence
+    }
 }
 
 function cleanTitle(key, title, titleData) {
-    if (!title) {
-        return ''
-    }
     if (title == "$" || titleData) {
         const newTitle = titleData.find(v => v.key == key)
         if (newTitle) {
@@ -207,38 +129,36 @@ function cleanTitle(key, title, titleData) {
         .replace(/%quotes%/g, "\"")
         .replace(/%slash%/g, "/")
         .replace(/%blackslash%/g, "\\")
-    if (title == "$") {
-        title = ''
-    }
     return title
 }
 
 function getKeyAndTitle(path, allowHyphensInSelector) {
     let key
     let title
+    let sequence
     const semicolonIndex = path.indexOf(";")
     if (semicolonIndex > 0 && path[semicolonIndex - 1] != '/') {
         path = path.substring(0, semicolonIndex)
     }
     if (path.startsWith("#")) {
+        let line = path
         const poundresult = poundre.exec(line)
         if (poundresult != null) {
-            const [, path] = poundresult
+            [, sequence, path] = poundresult
+            sequence = parseInt(sequence.trim())
             path = path.trim()
         }
     }
-    if (path.startsWith("==")) {
-        const doubleequalsresult = doubleequalsre.exec(line)
+    if (path.indexOf("==") > -1) {
+        const doubleequalsresult = doubleequalsre.exec(path)
         if (doubleequalsresult != null) {
-            const [, key] = doubleequalsresult
-            return [key.trim(), '']
-        }
-    }
-    else if (path.indexOf("==") > -1) {
-        const doubleequalsresult = doubleequalsre.exec(line)
-        if (doubleequalsresult != null) {
-            const [, key] = doubleequalsresult
+            let [, key] = doubleequalsresult
+            key = key.trim()
+            title = key[0].toUpperCase() + key.substr(1)
             return [key.trim(), title]
+        }
+        else {
+            path = path.replace(/==/, '')
         }
     }
     if (path.indexOf(" - ") > -1) {
@@ -257,47 +177,43 @@ function getKeyAndTitle(path, allowHyphensInSelector) {
         title = path
     }
     //+ 
-    key = createSelector(key, allowHyphensInSelector)
+    key = create_selector(key, allowHyphensInSelector)
     title = title.trim()
+
     //+ 
-    return [key, title]
+    return [key, title, sequence]
 }
 
-function createFromFileName(key, allowHyphensInSelector, keepDot) {
-    const semicolonIndex = key.indexOf(";")
-    if (semicolonIndex > 0 && key[semicolonIndex - 1] != '/') {
-        key = filename.substring(0, semicolonIndex)
-    }
-    else {
-        const lio = key.lastIndexOf(".")
-        if (lio > -1) {
-            key = key.substring(0, lio)
-        }
-    }
-    return createSelector(key, allowHyphensInSelector, keepDot)
-}
+// function createFromFileName(key, allowHyphensInSelector, keepDot) {
+//     const semicolonIndex = key.indexOf(";")
+//     if (semicolonIndex > 0 && key[semicolonIndex - 1] != '/') {
+//         key = filename.substring(0, semicolonIndex)
+//     }
+//     else {
+//         const lio = key.lastIndexOf(".")
+//         if (lio > -1) {
+//             key = key.substring(0, lio)
+//         }
+//     }
+//     return create_selector(key, allowHyphensInSelector, keepDot)
+// }
 
 function removeEachException(text) {
     let inside = false
-    let escaped = false
     let newString = ''
     for (let location = 0; location < text.length; location++) {
         let current = text[location]
-        if (current == '\\') {
-            escaped = !escaped
-        }
-        else if (current == '{' && !escaped) {
+        if (current == '{') {
             inside = true
         }
-        else if (current == '}' && inside && !escaped) {
+        else if (current == '}' && inside) {
             inside = false
         }
         else if (inside) {
-            escaped = false
+            continue
         }
         else {
             newString += current
-            escaped = false
         }
     }
     return newString
@@ -333,7 +249,71 @@ function formatBranchName(name) {
     return sb.join('').trim()
 }
 
-exports.parse = parse
-exports.parseUsingTitleData = parseUsingTitleData
-exports.parseUsingTitleDataSync = parseUsingTitleDataSync
-exports.createSelector = createSelector
+const parse = (input, base, options) => {
+    options = options || {}
+    options.labelMode = options.labelMode || 'root'
+    return processSelector(input, base, options)
+}
+
+const parse_with_titles = (input, base, options) => {
+    return new Promise((resolve, reject) => {
+        options = options || {}
+        options.labelMode = options.labelMode || 'root'
+        const parent = path.dirname(input).replace(/\\/g, "/")
+        if (typeof options.titleData !== 'undefined' && options.titleData.length > 0) {
+            return resolve(processSelector(input, base, options))
+        }
+        parseTitleData(base)
+            .then(rootTitleData =>
+                parseTitleData(parent)
+                    .then(relativeTitleData => {
+                        options.titleData = createEffectiveTitleData(rootTitleData, relativeTitleData)
+                        resolve(processSelector(input, base, options))
+                    })
+            )
+    })
+}
+
+const create_selector = (key, allowHyphensInSelector, keepDot) => {
+    if (typeof key === 'undefined') {
+        throw new Error('key is required')
+    }
+    key = clean(key)
+    if (key.indexOf("==") > -1) {
+        const partArray = key.split('/')
+        const list = []
+        for (let part of partArray) {
+            if (part.indexOf("==") > -1) {
+                const doubleequalsresult = doubleequalsre.exec(part)
+                if (doubleequalsresult != null) {
+                    const [, item] = doubleequalsresult
+                    list.push(item.trim())
+                }
+                else {
+                    list.push(part.replace(/==/, '', 'g'))
+                }
+            }
+            else {
+                list.push(part)
+            }
+        }
+        key = list.join("/")
+    }
+
+    key = key
+        .replace(/%questionmark%/g, "?")
+        .replace(/%colon%/g, ":")
+        .replace(/%quotes%/g, "\"")
+        .replace(/%slash%/g, "/")
+        .replace(/%blackslash%/g, "\\")
+        .replace(/ /g, '')
+        .trim().toLowerCase()
+
+    key = removeEachException(key)
+
+    key = key.replace(new RegExp(`[^A-Za-z0-9\/${(allowHyphensInSelector ? "-" : '')}${(keepDot ? "\\." : '')}]+`, 'g'), '')
+
+    return clean(key)
+}
+
+module.exports = { parse, parse_with_titles, create_selector }

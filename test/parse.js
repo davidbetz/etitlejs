@@ -45,13 +45,42 @@ const fairly_boring_test = {
     labels: ['billy', 'mathematics']
 }
 
-const branch_casing_test = {
-    file: path.join(SAMPLE_ROOT, 'james==king/Topological Analysis;mathematics.txt'),
+const sequence_test1 = {
+    file: path.join(SAMPLE_ROOT, 'james==king/#1#Topological Analysis;mathematics.txt'),
     path_expected: 'king/topologicalanalysis',
     branch_expected: 'king',
     branch_title_expected: 'James King',
     title_expected: 'Topological Analysis',
+    sequence: 1,
     labels: ['king', 'mathematics']
+}
+
+const sequence_test2 = {
+    file: path.join(SAMPLE_ROOT, 'james==king/#2#{Formulation of }Manifolds;mathematics.txt'),
+    path_expected: 'king/manifolds',
+    branch_expected: 'king',
+    branch_title_expected: 'James King',
+    title_expected: 'Formulation of Manifolds',
+    sequence: 2,
+    labels: ['king', 'mathematics']
+}
+
+const sequence_test3_broken = {
+    file: path.join(SAMPLE_ROOT, 'james==king/#3invalid.txt'),
+    path_expected: 'king/3invalid',
+    branch_expected: 'king',
+    branch_title_expected: 'James King',
+    title_expected: '#3invalid',
+    labels: ['king']
+}
+
+const starts_with_doubleequals = {
+    file: path.join(SAMPLE_ROOT, '==wasser/ignore.txt'),
+    path_expected: 'wasser/ignore',
+    branch_expected: 'wasser',
+    branch_title_expected: 'Wasser',
+    title_expected: 'ignore',
+    labels: ['wasser']
 }
 
 const exceptions_in_branch_test = {
@@ -90,182 +119,129 @@ const labelmode_explicit_test = {
     labels: ['2ndperson', 'mathematics', 'psychology']
 }
 
+const explicit_key_test = {
+    file: path.join(SAMPLE_ROOT, 'j{ane }olsen/records - gryrum ecga þeos medoheal morgentid.txt'),
+    path_expected: 'jolsen/records',
+    branch_expected: 'jolsen',
+    branch_title_expected: 'Jane Olsen',
+    title_expected: 'gryrum ecga þeos medoheal morgentid',
+    labels: ['jolsen']
+}
+
 const title_test = {
-    file: path.join(SAMPLE_ROOT, 's{cott }james/fundamental-process-of-behavior.txt'),
-    path_expected: 'sjames/fundamental-process-of-behavior',
+    file: path.join(SAMPLE_ROOT, 's{cott }james/Fundamental Process of Behavior.txt'),
+    path_expected: 'sjames/fundamentalprocessofbehavior',
     branch_expected: 'sjames',
     branch_title_expected: 'Scott James',
     title_expected: 'Fundamental Process of Behavior',
     labels: ['sjames']
 }
 
-const title_single_relative_test = {
-    file: path.join(SAMPLE_ROOT, 's{cott }james/$ - cv.txt'),
-    path_expected: 'sjames/cv',
-    branch_expected: 'sjames',
-    branch_title_expected: 'Scott James',
-    title_expected: 'Curriculum Vitae',
-    labels: ['sjames']
+const title_doubleequals_on_title_start = {
+    file: path.join(SAMPLE_ROOT, 'asdf/==useless.txt'),
+    path_expected: 'asdf/useless',
+    branch_expected: 'asdf',
+    branch_title_expected: 'Asdf',
+    title_expected: 'Useless',
+    labels: ['asdf']
 }
 
-const title_single_override_test = {
-    file: path.join(SAMPLE_ROOT, 's{cott }james/$ - resume.txt'),
-    path_expected: 'sjames/resume',
-    branch_expected: 'sjames',
-    branch_title_expected: 'Scott James',
-    title_expected: 'Résumé',
-    labels: ['sjames']
+const title_doubleequals_in_middle_of_title = {
+    file: path.join(SAMPLE_ROOT, 'asdf/something==useless.txt'),
+    path_expected: 'asdf/useless',
+    branch_expected: 'asdf',
+    branch_title_expected: 'Asdf',
+    title_expected: 'Useless',
+    labels: ['asdf']
+}
+
+const title_doubleequals_invalid = {
+    file: path.join(SAMPLE_ROOT, 'asdf/==.txt'),
+    path_expected: 'asdf',
+    branch_expected: 'asdf',
+    branch_title_expected: 'Asdf',
+    title_expected: '',
+    labels: ['asdf']
 }
 
 const check = (item, result) => {
-    let [selector, branch, title, branch_title, labels] = result
-    expect(selector).to.equal(item.path_expected)
-    expect(branch).to.equal(item.branch_expected)
-    expect(branch_title).to.equal(item.branch_title_expected)
-    expect(title).to.equal(item.title_expected)
-    expect(item.labels.length).to.equal(labels.length)
-    item.labels.forEach(v => expect(labels).to.include(v))
+    expect(result.selector).to.equal(item.path_expected)
+    expect(result.branch).to.equal(item.branch_expected)
+    expect(result.branch_title).to.equal(item.branch_title_expected)
+    expect(result.title).to.equal(item.title_expected)
+    expect(result.sequence).to.equal(item.sequence)
+    expect(result.labels.length).to.equal(item.labels.length)
+    item.labels.forEach(v => expect(result.labels).to.include(v))
 }
 
-describe("econtent", function () {
-    it("tests createSelector", function (done) {
-        const selector = etitle.createSelector('{=s.=b. }smith/lectures/{On the }2nd Person')
-        expect(selector).to.equal('smith/lectures/2ndperson')
-        done()
-    })
-
-    it("tests createSelector with deepDot", function (done) {
-        const selector = etitle.createSelector('mongodb/basic{=setup}/configure.sh', false, true)
-        expect(selector).to.equal('mongodb/basic/configure.sh')
-        done()
-    })
-
-    it("tests createSelector with deepDot (but not set)", function (done) {
-        const selector = etitle.createSelector('mongodb/basic{=setup}/configure.sh', false, false)
-        expect(selector).to.not.equal('mongodb/basic/configure.sh')
-        done()
-    })
-
-    it("tests createSelector with allowHyphensInSelector", function (done) {
-        const selector = etitle.createSelector('s{cott }james/fundamental-process-of-behavior', true)
-        expect(selector).to.equal('sjames/fundamental-process-of-behavior')
-        done()
-    })
-
-    it("tests 'root' (default) labelMode", function (done) {
+describe("parse", function () {
+    it("basic", function () {
         check(basic_test, etitle.parse(basic_test.file, SAMPLE_ROOT))
-        done()
     })
 
-    it("tests 'branch' labelMode", function (done) {
-        check(labelmode_branch_test, etitle.parse(labelmode_branch_test.file, SAMPLE_ROOT, { labelMode: 'branch'} ))
-        done()
+    it("simple", function () {
+        check(title_test, etitle.parse(title_test.file, SAMPLE_ROOT))
     })
 
-    it("tests 'each' labelMode", function (done) {
-        check(labelmode_each_test, etitle.parse(labelmode_each_test.file, SAMPLE_ROOT, { labelMode: 'each'} ))
-        done()
+    it("'root' (default) labelMode", function () {
+        check(basic_test, etitle.parse(basic_test.file, SAMPLE_ROOT))
     })
 
-    it("tests 'explicit' labelMode", function (done) {
-        check(labelmode_explicit_test, etitle.parse(labelmode_explicit_test.file, SAMPLE_ROOT, { labelMode: 'explicit'} ))
-        done()
+    it("'branch' labelMode", function () {
+        check(labelmode_branch_test, etitle.parse(labelmode_branch_test.file, SAMPLE_ROOT, { labelMode: 'branch' }))
     })
 
-    it("tests special characters", function (done) {
+    it("'each' labelMode", function () {
+        check(labelmode_each_test, etitle.parse(labelmode_each_test.file, SAMPLE_ROOT, { labelMode: 'each' }))
+    })
+
+    it("'explicit' labelMode", function () {
+        check(labelmode_explicit_test, etitle.parse(labelmode_explicit_test.file, SAMPLE_ROOT, { labelMode: 'explicit' }))
+    })
+
+    it("starts with doubleequals", function () {
+        check(starts_with_doubleequals, etitle.parse(starts_with_doubleequals.file, SAMPLE_ROOT))
+    })
+
+    it("doubleequals (invalid)", function () {
+        check(title_doubleequals_invalid, etitle.parse(title_doubleequals_invalid.file, SAMPLE_ROOT))
+    })
+
+    it("doubleequals key", function () {
+        check(title_doubleequals_on_title_start, etitle.parse(title_doubleequals_on_title_start.file, SAMPLE_ROOT))
+    })
+
+    it("doubleequals key (middle)", function () {
+        check(title_doubleequals_in_middle_of_title, etitle.parse(title_doubleequals_in_middle_of_title.file, SAMPLE_ROOT))
+    })
+
+    it("explicit key", function () {
+        check(explicit_key_test, etitle.parse(explicit_key_test.file, SAMPLE_ROOT))
+    })
+
+    it("special characters", function () {
         check(special_character_test1, etitle.parse(special_character_test1.file, SAMPLE_ROOT))
-        done()
     })
 
-    it("tests more special characters", function (done) {
+    it("more special characters", function () {
         check(special_character_test2, etitle.parse(special_character_test2.file, SAMPLE_ROOT))
-        done()
     })
 
-    it("tests branch casing", function (done) {
-        check(branch_casing_test, etitle.parse(branch_casing_test.file, SAMPLE_ROOT))
-        done()
+    it("sequence", function () {
+        check(sequence_test1, etitle.parse(sequence_test1.file, SAMPLE_ROOT))
+        check(sequence_test2, etitle.parse(sequence_test2.file, SAMPLE_ROOT))
     })
 
-    it("tests root .titles", function (done) {
-        etitle.parseUsingTitleData(title_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true })
-            .then(v => {
-                check(title_test, v)
-                done()
-            })
-            .catch(err => done(err))
+    it("sequence (invalid)", function () {
+        check(sequence_test3_broken, etitle.parse(sequence_test3_broken.file, SAMPLE_ROOT))
     })
 
-    it("tests root .titles with wrong allowHyphensInSelector setting", function (done) {
-        etitle.parseUsingTitleData(title_test.file, SAMPLE_ROOT, { allowHyphensInSelector: false })
-            .then(v => {
-                let [selector,] = v
-                expect(selector).to.not.equal(title_test.path_expected)
-                done()
-            })
-            .catch(err => done(err))
-    })
-
-    it("tests relative .titles", function (done) {
-        etitle.parseUsingTitleData(title_single_relative_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true })
-            .then(v => {
-                check(title_single_relative_test, v)
-                done()
-            })
-            .catch(err => done(err))
-    })
-
-    it("tests relative override .titles", function (done) {
-        etitle.parseUsingTitleData(title_single_override_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true })
-            .then(v => {
-                check(title_single_override_test, v)
-                done()
-            })
-            .catch(err => done(err))
-    })
-
-    it("tests root .titles sync", function (done) {
-        check(title_test, etitle.parseUsingTitleDataSync(title_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true }))
-        done()
-    })
-
-    it("tests root .titles with wrong allowHyphensInSelector setting sync", function (done) {
-        let [selector,] = etitle.parseUsingTitleDataSync(title_test.file, SAMPLE_ROOT, { allowHyphensInSelector: false })
-        expect(selector).to.not.equal(title_test.path_expected)
-        done()
-    })
-
-    it("tests relative .titles sync", function (done) {
-        check(title_single_relative_test, etitle.parseUsingTitleDataSync(title_single_relative_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true }))
-        done()
-    })
-
-    it("tests relative override .titles sync", function (done) {
-        check(title_single_override_test, etitle.parseUsingTitleDataSync(title_single_override_test.file, SAMPLE_ROOT, { allowHyphensInSelector: true }))
-        done()
-    })
-
-    it("tests with provided titles", function (done) {
-        const options = {
-            allowHyphensInSelector: true,
-            titleData: [
-                {
-                    "key": "sjames/fundamental-process-of-behavior",
-                    "title": "Fundamental Process of Behavior"
-                }
-            ]
-        }
-        const result = etitle.parseUsingTitleDataSync(title_test.file, SAMPLE_ROOT, options)
-        check(title_test, result)
-        done()
-    })
-
-    it("tests exceptions in branch", function (done) {
+    it("exceptions in branch", function (done) {
         check(exceptions_in_branch_test, etitle.parse(exceptions_in_branch_test.file, SAMPLE_ROOT))
         done()
     })
 
-    it("tests the most common usage", function (done) {
+    it("the most common usage", function (done) {
         check(fairly_boring_test, etitle.parse(fairly_boring_test.file, SAMPLE_ROOT))
         done()
     })
