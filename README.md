@@ -1,6 +1,6 @@
 # Extended Title Reader (JavaScript)
 
-**Copyright (c) 2017 David Betz**
+Copyright (c) 2017-2018 David Betz
 
 (the 2017 JavaScript port of the 2008 .NET version)
 
@@ -10,19 +10,18 @@
 [![coverage](https://img.shields.io/codecov/c/github/davidbetz/etitlejs.svg)](https://img.shields.io/codecov/c/github/davidbetz/etitlejs.svg)
 [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/davidbetz)
 
-
 ## Installation
 
     npm install etitle
 
-Home:
+### Home
 
 * [https://www.npmjs.com/package/etitle](https://www.npmjs.com/package/etitle)
 
 * [https://github.com/davidbetz/etitlejs](https://github.com/davidbetz/etitlejs)
 
-Related project: 
-    
+### Related project
+
 * [https://www.npmjs.com/package/econtent](https://www.npmjs.com/package/econtent)
 
 * [https://github.com/davidbetz/econtentn](https://github.com/davidbetz/econtentn)
@@ -148,7 +147,7 @@ Every modern content system has a concept of labels / tags (hereafter "labels").
     {=s.=b. }smith/lectures/{On the }2nd Person;2nd=person;mathematics;psychology.txt
 
 This would have the following labels:
-    
+
     'smith', '2ndperson', 'mathematics', 'psychology'
 
 There are four (4) different label modes. These modes tell `etitle` how to find the labels.
@@ -214,7 +213,6 @@ Here's a full set of special character codes:
     %quotes%
     %slash%
     %blackslash%
- 
 
 ### .titles for existing data
 
@@ -359,7 +357,6 @@ The title for this page is:
 The label `gaffin` and the title `Richard Gaffin` came from the following folder name:
 
     E:\Drive\Documents\Content\Ectypal\EctypalContent\richard==gaffin
-
 
 Consider the following URL:
 

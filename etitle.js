@@ -1,5 +1,5 @@
 // MIT License
-// Copyright (c) 2017 David Betz
+// Copyright (c) 2017-2018 David Betz
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -18,9 +18,10 @@
 
 "use strict"
 
+const debug = require('debug')('etitle')
+
 const fs = require('fs')
 const path = require('path')
-const u = require('./utility')
 
 const poundre = /^#([0-9]+)#(.*)/i
 const doubleequalsre = /==([A-Za-z0-9]+)/i
@@ -70,6 +71,7 @@ function clean(path) {
 }
 
 function processSelector(input, base, options) {
+    debug('processSelector', input)
     const allowHyphensInSelector = options.allowHyphensInSelector
     const labelMode = options.labelMode
     input = clean(input.substring(base.length)).replace(/\\/g, "/")
@@ -117,7 +119,7 @@ function processSelector(input, base, options) {
 
 function cleanTitle(key, title, titleData) {
     if (title == "$" || titleData) {
-        const newTitle = titleData.find(v => v.key == key)
+        const newTitle = titleData.find(v => v.key.toLowerCase() == key.toLowerCase())
         if (newTitle) {
             title = newTitle.title
         }
@@ -183,20 +185,6 @@ function getKeyAndTitle(path, allowHyphensInSelector) {
     //+ 
     return [key, title, sequence]
 }
-
-// function createFromFileName(key, allowHyphensInSelector, keepDot) {
-//     const semicolonIndex = key.indexOf(";")
-//     if (semicolonIndex > 0 && key[semicolonIndex - 1] != '/') {
-//         key = filename.substring(0, semicolonIndex)
-//     }
-//     else {
-//         const lio = key.lastIndexOf(".")
-//         if (lio > -1) {
-//             key = key.substring(0, lio)
-//         }
-//     }
-//     return create_selector(key, allowHyphensInSelector, keepDot)
-// }
 
 function removeEachException(text) {
     let inside = false
@@ -316,4 +304,8 @@ const create_selector = (key, allowHyphensInSelector, keepDot) => {
     return clean(key)
 }
 
-module.exports = { parse, parse_with_titles, create_selector }
+module.exports = {
+    parse,
+    parse_with_titles,
+    create_selector
+}

@@ -117,4 +117,21 @@ describe("parse_with_titles", function () {
                 done()
             })
     })
+
+    it("with provided titles (mixed case)", function (done) {
+        const options = {
+            allowHyphensInSelector: true,
+            titleData: [
+                {
+                    "key": "sjames/Fundamental-process-of-behavior",
+                    "title": "Fundamental Process of Behavior"
+                }
+            ]
+        }
+        etitle.parse_with_titles(title_hyphen_test.file, SAMPLE_ROOT, options)
+            .then(result => {
+                check(title_hyphen_test, result)
+                done()
+            })
+    })
 })
