@@ -24,7 +24,7 @@ Copyright (c) 2017-2018 David Betz
 
 * [https://www.npmjs.com/package/econtent](https://www.npmjs.com/package/econtent)
 
-* [https://github.com/davidbetz/econtentn](https://github.com/davidbetz/econtentn)
+* [https://github.com/davidbetz/econtentjs](https://github.com/davidbetz/econtentjs)
 
 ## Purpose
 
