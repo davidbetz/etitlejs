@@ -1,6 +1,6 @@
 {
   "name": "etitle",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Extended Title Reader",
   "main": "etitle.js",
   "author": "David Betz",
@@ -9,8 +9,9 @@
     "test": "mocha test",
     "report-coverage": "nyc --reporter=html --reporter=text mocha && codecov"
   },
-  "dependencies": {
-    "debug": "4.1.0"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidbetz/etitlejs"
   },
   "devDependencies": {
     "chai": "4.2.0",

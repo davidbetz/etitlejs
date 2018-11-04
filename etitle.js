@@ -18,8 +18,6 @@
 
 "use strict"
 
-const debug = require('debug')('etitle')
-
 const fs = require('fs')
 const path = require('path')
 
@@ -71,7 +69,6 @@ function clean(path) {
 }
 
 function processSelector(input, base, options) {
-    debug('processSelector', input)
     const allowHyphensInSelector = options.allowHyphensInSelector
     const labelMode = options.labelMode
     input = clean(input.substring(base.length)).replace(/\\/g, "/")
